@@ -32,30 +32,27 @@ def parse_pdf_annotations(pdf_path: str) -> list[dict]:
     annotations = []
 
     try:
-        doc = pymupdf.open(pdf_path)
+        with pymupdf.open(pdf_path) as doc:
+            for page_num, page in enumerate(doc.pages(), start=1):
+                # 获取页面注释
+                annots = page.annots()
 
-        for page_num, page in enumerate(doc, start=1):
-            # 获取页面注释
-            annots = page.annots()
-
-            if annots is not None:
-                for annot in annots:
-                    info = annot.info if hasattr(annot, 'info') else {}
-                    annot_info = {
-                        'page': page_num,
-                        'type': annot.type[0],
-                        'subtype': annot.type[1],
-                        'content': info.get('content', ''),
-                        'subject': info.get('subject', ''),
-                        'rect': annot.rect,
-                        'created': info.get('created', ''),
-                        'modified': info.get('modified', ''),
-                        'color': list(annot.colors.get('stroke') or annot.colors.get('fill') or []) if annot.colors else None,
-                        'opacity': annot.opacity
-                    }
-                    annotations.append(annot_info)
-
-        doc.close()
+                if annots is not None:
+                    for annot in annots:
+                        info = annot.info if hasattr(annot, 'info') else {}
+                        annot_info = {
+                            'page': page_num,
+                            'type': annot.type[0],
+                            'subtype': annot.type[1],
+                            'content': info.get('content', ''),
+                            'subject': info.get('subject', ''),
+                            'rect': annot.rect,
+                            'created': info.get('created', ''),
+                            'modified': info.get('modified', ''),
+                            'color': list(annot.colors.get('stroke') or annot.colors.get('fill') or []) if annot.colors else None,
+                            'opacity': annot.opacity
+                        }
+                        annotations.append(annot_info)
 
     except Exception as e:
         print(f"解析 PDF 失败：{e}")
